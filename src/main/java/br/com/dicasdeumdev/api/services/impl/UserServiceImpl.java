@@ -24,8 +24,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findById(Integer id) {
-        Optional<User> obj = repository.findById(id);
-        return obj.orElseThrow(() -> new ObjectNotFoundException("Objeto não encontrado"));
+        validationId(id);
+        return repository.findById(id).get();
     }
 
     @Override
@@ -45,6 +45,12 @@ public class UserServiceImpl implements UserService {
         return repository.save(modelMapper.map(userDTO, User.class));
     }
 
+    @Override
+    public void delete(Integer id) {
+        validationId(id);
+        repository.deleteById(id);
+    }
+
     public void validationUser(UserDTO userDTO) {
         Optional<User> user = repository.findByEmail(userDTO.getEmail());
 
@@ -52,4 +58,9 @@ public class UserServiceImpl implements UserService {
             throw new DataIntegratyViolationException("E-mail já cadastrado no sistemas");
         }
     }
+
+    public void validationId(Integer userId) {
+        repository.findById(userId).orElseThrow(() -> new ObjectNotFoundException("Objeto não encontrado"));
+    }
+
 }
