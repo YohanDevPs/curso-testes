@@ -62,5 +62,4 @@ public class UserServiceImpl implements UserService {
     public void validationId(Integer userId) {
         repository.findById(userId).orElseThrow(() -> new ObjectNotFoundException("Objeto não encontrado"));
     }
-
 }

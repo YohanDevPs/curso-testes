@@ -17,8 +17,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class UserServiceImplTest {
 
@@ -144,7 +143,24 @@ class UserServiceImplTest {
     }
 
     @Test
-    void delete() {
+    void deleteUserWithSuccess() {
+        when(repository.findById(anyInt())).thenReturn(optionalUser);
+        doNothing().when(repository).deleteById(anyInt());
+
+        userService.delete(ID);
+        verify(repository, times(1)).deleteById(anyInt());
+    }
+
+    @Test
+    void deleteUserAndThrowsObjectNotFoundException() {
+        when(repository.findById(anyInt())).thenThrow(new ObjectNotFoundException(MSG_OBJECT_NOT_FOUND));
+
+        try {
+            userService.delete(ID);
+        } catch (Exception ex) {
+            assertEquals(MSG_OBJECT_NOT_FOUND, ex.getMessage());
+            assertEquals(ObjectNotFoundException.class, ex.getClass());
+        }
     }
 
     @Test
