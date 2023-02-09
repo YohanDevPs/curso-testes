@@ -4,6 +4,7 @@ import br.com.dicasdeumdev.api.domain.User;
 import br.com.dicasdeumdev.api.domain.dto.UserDTO;
 import br.com.dicasdeumdev.api.exeptions.ObjectNotFoundException;
 import br.com.dicasdeumdev.api.repositories.UserRepository;
+import br.com.dicasdeumdev.api.services.exeptions.DataIntegratyViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -11,10 +12,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.modelmapper.ModelMapper;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 class UserServiceImplTest {
@@ -24,6 +27,7 @@ class UserServiceImplTest {
     public static final String EMAIL = "yohan@gmail.com";
     public static final String PASSWORD = "1234";
     public static final String MSG_OBJECT_NOT_FOUND = "Objeto não encontrado";
+    public static final int INDEX = 0;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -72,11 +76,44 @@ class UserServiceImplTest {
 
 
     @Test
-    void findAll() {
+    void whenFindAllTheReturnAnListOfUsers() {
+        when(repository.findAll()).thenReturn(List.of(user));
+
+        var listResponse = userService.findAll();
+
+        assertEquals(1, listResponse.size());
+        assertEquals(User.class, listResponse.get(INDEX).getClass());
+
+        assertEquals(ID, listResponse.get(INDEX).getId());
+        assertEquals(NAME, listResponse.get(INDEX).getName());
+        assertEquals(EMAIL, listResponse.get(INDEX).getEmail());
+        assertEquals(PASSWORD, listResponse.get(INDEX).getPassword());
     }
 
     @Test
-    void create() {
+    void mustCreateNewUserAndReturnAUser() {
+        when(repository.save(any())).thenReturn(user);
+
+        var response = userService.create(userDTO);
+
+        assertNotNull(response);
+        assertEquals(ID, response.getId());
+        assertEquals(NAME, response.getName());
+        assertEquals(EMAIL, response.getEmail());
+        assertEquals(PASSWORD, response.getPassword());
+    }
+
+    @Test
+    void mustCreateNewUserAndReturnObjectNotFoundException() {
+        when(repository.findByEmail(anyString())).thenReturn(optionalUser);
+
+        try {
+            optionalUser.get().setId(2);
+            userService.create(userDTO);
+        } catch (Exception ex) {
+            assertEquals(DataIntegratyViolationException.class, ex.getClass());
+            assertEquals("E-mail já cadastrado no sistema", ex.getMessage());
+        }
     }
 
     @Test
